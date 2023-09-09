@@ -1,12 +1,14 @@
 from AvitoParser import AvitoParser
+# from Product import *
 
+# createTables()
 
-search_str = 'iphone xs'
+search_str = 'iphone+xs'
 
 
 def main():
     parser = AvitoParser()
-    parser.getAds(search_str)
+    parser.handleAds(search_str)
 
 
 if __name__ == "__main__":
