@@ -1,9 +1,7 @@
 import sqlite3
 from peewee import *
 
-db_file = "products.db"
-
-# con = sqlite3.connect(db_file)
+db_file = "/home/tony/projects/Avito-Parser/products.db"
 
 db = SqliteDatabase(db_file)
 

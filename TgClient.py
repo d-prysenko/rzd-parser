@@ -8,7 +8,7 @@ class TgClient:
     chat_id = ''
 
     def __init__(self):
-        with open('token.json', 'r') as token_file:
+        with open('/home/tony/projects/Avito-Parser/token.json', 'r') as token_file:
             data = json.load(token_file)
             self.token = data['token']
             self.chat_id = data['chat_id']
