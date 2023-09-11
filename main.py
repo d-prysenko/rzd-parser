@@ -1,15 +1,21 @@
+import sys, getopt
 from AvitoParser import AvitoParser
-# from Product import *
+from Product import *
 
-# createTables()
 
 search_str = 'iphone+xs'
 
 
-def main():
+def main(argv):
+    opts, args = getopt.getopt(argv,":i")
+
+    if ('-i', '') in opts:
+        print('Creating tables..')
+        createTables()
+    
     parser = AvitoParser()
     parser.handleAds(search_str)
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])

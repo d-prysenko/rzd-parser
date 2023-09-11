@@ -1,6 +1,6 @@
 import requests
 import urllib.parse
-import json
+from Settings import Settings
 
 class TgClient:
     base_url = 'https://api.telegram.org/bot{0}/' 
@@ -8,10 +8,8 @@ class TgClient:
     chat_id = ''
 
     def __init__(self):
-        with open('/home/tony/projects/Avito-Parser/token.json', 'r') as token_file:
-            data = json.load(token_file)
-            self.token = data['token']
-            self.chat_id = data['chat_id']
+        self.token = Settings().get('token')
+        self.chat_id = Settings().get('chat_id')
 
     def _make_request_url(self, method, params):
         return self.base_url.format(self.token) + method + '?' + urllib.parse.urlencode(params)

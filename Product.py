@@ -1,9 +1,8 @@
 import sqlite3
 from peewee import *
+from Settings import Settings
 
-db_file = "/home/tony/projects/Avito-Parser/products.db"
-
-db = SqliteDatabase(db_file)
+db = SqliteDatabase(Settings().cwd + '/products.db')
 
 def createTables():
     db.create_tables([Product])
