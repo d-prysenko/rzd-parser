@@ -2,9 +2,11 @@
 $ cp parameters.dist.json parameters.json
 ```
 Edit `parameters.json`
+
+> You can obtain chat-id by starting chat with bot and requesting `https://api.telegram.org/bot#token#/getUpdates` method
 ```sh
-$ python main.py -i # to init db before start
-$ crontab -e
+$ python main.py # to exec one time
+$ crontab -e # to plan the task
 ...
-* * * * * python /path/to/Avito-Parser/main.py
+* * * * * python /path/to/rzd-parser/main.py
 ```

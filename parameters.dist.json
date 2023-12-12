@@ -1,4 +1,10 @@
 {
     "token": "#bot-token#",
-    "chat_id": "#chat-id#"
+    "error_chats": [
+        "#chat-id-1#"
+    ],
+    "chats": [
+        "#chat-id-1#",
+        "#chat-id-2#"
+    ]
 }

@@ -1,21 +1,11 @@
 import sys, getopt
-from AvitoParser import AvitoParser
-from Product import *
+from RzdParser import RzdParser
 
 
-search_str = 'iphone+xs'
-
-
-def main(argv):
-    opts, args = getopt.getopt(argv,":i")
-
-    if ('-i', '') in opts:
-        print('Creating tables..')
-        createTables()
-    
-    parser = AvitoParser()
-    parser.handleAds(search_str)
+def main():
+    parser = RzdParser()
+    parser.handleOffers()
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
