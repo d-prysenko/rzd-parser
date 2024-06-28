@@ -12,7 +12,7 @@ class RzdParser:
 
     RETRY_COUNT = 3
 
-    def handleOffers(self):
+    def handleOffers(self, datetime):
         
         try_number = 0
         last_error = None
@@ -21,7 +21,7 @@ class RzdParser:
             try:
                 try_number += 1
 
-                response = self.rzd_client.getTrains(RzdCity.Moscow, RzdCity.Voronezh, "2023-12-29T00:00:00")
+                response = self.rzd_client.getTrains(RzdCity.Spb, RzdCity.Voronezh, datetime)
 
                 last_error = None
 
@@ -49,13 +49,16 @@ class RzdParser:
 
             # datetime filter
 
-            if (departure_datetime.tm_hour < 15 or (departure_datetime.tm_hour == 15 and departure_datetime.tm_min < 30)):
-                continue
+            # if (departure_datetime.tm_hour < 15 or (departure_datetime.tm_hour == 15 and departure_datetime.tm_min < 30)):
+            #     continue
 
-            if (arrival_datetime.tm_mday > 30):
-                continue
+            # if (arrival_datetime.tm_mday > 30):
+            #     continue
 
-            if (arrival_datetime.tm_mday == 30 and arrival_datetime.tm_hour > 12):
+            # if (arrival_datetime.tm_mday == 30 and arrival_datetime.tm_hour > 12):
+            #     continue
+
+            if (int(train['TripDuration']) / 60 > 19.5):
                 continue
 
             message = '*Поезд ' + train_number + '*\n' + time.strftime('%d.%m %H:%M', departure_datetime) + ' - ' + time.strftime('%d.%m %H:%M', arrival_datetime) + '\n'
@@ -79,11 +82,11 @@ class RzdParser:
 
                 # if you have 1 ticket and need to find 1 more on the same train
 
-                if (train_number == '777А'):
-                    temp_message = '*Билет на тот же поезд*\n' + message + str(group['MinPrice']) + '₽'
-                    messages.append(temp_message)
+                # if (train_number == '146Э' and group['MinPrice'] < 2700):
+                #     temp_message = '*Билет на тот же поезд*\n' + message + str(group['MinPrice']) + '₽'
+                #     messages.append(temp_message)
 
-                    continue
+                #     continue
 
                 tickets_count += group['TotalPlaceQuantity']
 
@@ -98,16 +101,31 @@ class RzdParser:
 
             # count and price filter
 
-            if (tickets_count >= 3 and min(tickets_costs_in_groups[key]) < 3000):
-                temp_message = '*Найдено три или более билетов на поезд*\n' + message + '\n'
+            # if (tickets_count >= 3 and min(tickets_costs_in_groups[key]) < 3000):
+            #     temp_message = '*Найдено три или более билетов на поезд*\n' + message + '\n'
 
-                for key, value in tickets_count_in_groups.items():
-                    temp_message += key + ': ' + str(value) + ' шт., от ' + str(min(tickets_costs_in_groups[key])) + '₽\n'
+            #     for key, value in tickets_count_in_groups.items():
+            #         temp_message += key + ': ' + str(value) + ' шт., от ' + str(min(tickets_costs_in_groups[key])) + '₽\n'
 
-                messages.append(temp_message)
+            #     messages.append(temp_message)
+            
+            available_price_group = {}
 
-            for msg in messages:
-                print(msg)
+            for key, value in tickets_count_in_groups.items():
+                min_group_cost = min(tickets_costs_in_groups[key])
+                if (min_group_cost < 40000):
+                    available_price_group[key] = min_group_cost
 
-                self.tg_client.send_notification(msg)
+            if (len(available_price_group) > 0):
+                train_info_header = message
+                groups_info = ''
+                
+                for key, value in available_price_group.items():
+                    groups_info += key + ': ' + str(value) + ' шт., от ' + str(available_price_group[key]) + '₽\n'
+
+                message_to_user = train_info_header + groups_info
+
+                print(message_to_user)
+
+                self.tg_client.send_notification(message_to_user)
             

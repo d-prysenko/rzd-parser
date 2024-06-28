@@ -4,6 +4,7 @@ from enum import Enum
 class RzdCity(Enum):
     Moscow = "2000000"
     Voronezh = "2014000"
+    Spb = "2004000"
 
 class RzdApiClient:
     http_client = HttpClient()
