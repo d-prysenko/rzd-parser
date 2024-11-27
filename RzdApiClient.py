@@ -12,7 +12,7 @@ class RzdApiClient:
     def getTrains(self, origin, destination, date):
         payload = {
             'CarGrouping': "DontGroup",
-            'CarIssuingType': "PassengersAndBaggage",
+            'CarIssuingType': "All",
             'DepartureDate': date,
             'Destination': destination.value,
             'GetByLocalTime': True,
