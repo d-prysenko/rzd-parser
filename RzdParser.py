@@ -71,11 +71,11 @@ class RzdParser:
             # if (train_number != '035А' and train_number != '035A'):
             #     continue
 
+            all_trains[train_number] = train['DepartureDateTime']
+
             if (self._is_in_db(train_number, train['DepartureDateTime'])):
                 print(train_number + ' already sent')
                 continue
-
-            all_trains[train_number] = train['DepartureDateTime']
 
             db_train = Train()
             db_train.train_number = train_number
@@ -168,9 +168,8 @@ class RzdParser:
             if (self._is_in_db(key, all_trains[key])):
                 self._delete_unavailable(key, all_trains[key])
 
-
     def _is_in_db(self, number, departure_datetime):
         return Train.select().where(Train.train_number == number and Train.departure_datetime == departure_datetime).count() > 0  
 
     def _delete_unavailable(self, number, departure_datetime):
-        return Train.delete().where(Train.train_number == number and Train.departure_datetime == departure_datetime)  
+        return Train.get(Train.train_number == number and Train.departure_datetime == departure_datetime).delete_instance()
