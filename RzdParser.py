@@ -73,14 +73,14 @@ class RzdParser:
 
             all_trains[train_number] = train['DepartureDateTime']
 
-            if (self._is_in_db(train_number, train['DepartureDateTime'])):
-                print(train_number + ' already sent')
-                continue
+            # if (self._is_in_db(train_number, train['DepartureDateTime'])):
+            #     print(train_number + ' already sent')
+            #     continue
 
-            db_train = Train()
-            db_train.train_number = train_number
-            db_train.departure_datetime = train['DepartureDateTime']
-            db_train.save()
+            # db_train = Train()
+            # db_train.train_number = train_number
+            # db_train.departure_datetime = train['DepartureDateTime']
+            # db_train.save()
 
             message = '*Поезд ' + train_number + '*\n' + time.strftime('%d.%m %H:%M', departure_datetime) + ' - ' + time.strftime('%d.%m %H:%M', arrival_datetime) + '\n'
 
@@ -158,9 +158,18 @@ class RzdParser:
 
                 available_trains[train_number] = train['DepartureDateTime']
 
+                if (self._is_in_db(train_number, train['DepartureDateTime'])):
+                    print(train_number + ' already sent')
+                    continue
+
                 print(message_to_user)
 
                 self.tg_client.send_notification(message_to_user)
+
+                db_train = Train()
+                db_train.train_number = train_number
+                db_train.departure_datetime = train['DepartureDateTime']
+                db_train.save()
 
         non_available_trains = all_trains.keys() - available_trains.keys()
 
