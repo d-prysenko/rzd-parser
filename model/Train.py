@@ -5,7 +5,7 @@ from Settings import Settings
 
 db = SqliteDatabase(Settings().cwd + '/trains.db')
 
-def createTables():
+def create_tables():
     db.create_tables([Train])
 
 class BaseModel(Model):

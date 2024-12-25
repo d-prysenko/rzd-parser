@@ -1,11 +1,13 @@
-from RzdApiClient import *
-from Train import *
+from RzdApiClient import RzdApiClient
 from TgClient import TgClient
 import urllib.parse
 import json
 import requests
 import time
 import datetime
+from TrainDTO import Train, Offer
+
+
 
 class RzdParser:
     rzd_client = RzdApiClient()
@@ -176,6 +178,87 @@ class RzdParser:
         for key in non_available_trains:
             if (self._is_in_db(key, all_trains[key])):
                 self._delete_unavailable(key, all_trains[key])
+
+
+
+
+
+
+    
+    def get_trains(self, datetime, origin, destination):
+
+        try_number = 0
+        last_error = None
+
+        while try_number < self.RETRY_COUNT:
+            try:
+                try_number += 1
+
+                response = self.rzd_client.getTrains(origin, destination, datetime)
+
+                last_error = None
+
+                if (response.status_code != 200):
+                    raise ValueError('status code is ' + str(response.status_code))
+
+                break
+            except e:
+                time.sleep(1)
+                last_error = e
+                print(e)
+
+        if (last_error != None):
+            self.tg_client.send_error_notification(last_error)
+
+            return
+
+        json_data = json.loads(response.text)
+
+        trains: list[Train] = []
+
+        for json_train in json_data['Trains']:
+
+            train = Train()
+            train.number = json_train['TrainNumber']
+            train.display_number = json_train['DisplayTrainNumber']
+            train.departure_time = time.strptime(json_train['DepartureDateTime'], '%Y-%m-%dT%H:%M:%S')
+            train.arrival_time = time.strptime(json_train['ArrivalDateTime'], '%Y-%m-%dT%H:%M:%S')
+
+            for group in json_train['CarGroups']:
+                if (group['HasPlacesForDisabledPersons']):
+                    continue
+
+                if (group['CarType'] == 'Baggage'):
+                    continue
+
+                if (group['MaxPrice'] <= 1):
+                    continue
+
+                offer = Offer()
+                offer.min_price = group['MinPrice']
+                offer.max_price = group['MaxPrice']
+                offer.place_quantity = group['TotalPlaceQuantity']
+                offer.lower_place_quantity = group['LowerPlaceQuantity']
+                offer.service_class = group['ServiceClasses'][0] or ''
+                offer.car_type_name = group['CarTypeName']
+
+                train.offers.append(offer)
+            
+            if (len(train.offers) > 0):
+                trains.append(train)
+        
+        return trains
+
+            
+
+
+
+
+
+
+
+
+
 
     def _is_in_db(self, number, departure_datetime):
         return Train.select().where(Train.train_number == number and Train.departure_datetime == departure_datetime).count() > 0  
