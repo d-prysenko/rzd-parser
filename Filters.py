@@ -93,7 +93,7 @@ class Filters:
 
         for filter in filters:
             if (not filter.apply(entity)):
-                filter_passed = True
+                filter_passed = False
                 break
 
         return filter_passed
@@ -156,17 +156,17 @@ class DepartureTimeFilter(TrainFilter):
 
         return departure_time >= self.time_from and departure_time <= self.time_to
 
-# class TravelTimeLowerThan(TrainFilter):
-#     def __init__(self, travel_time: str):
-#         super().__init__()
-#         self.travel_time = time.strptime(travel_time, '%H:%M')
+class TripDurationLowerThan(TrainFilter):
+    def __init__(self, minutes: float):
+        super().__init__()
+        self.trip_duration = minutes
 
-#     def apply(self, train):
-#         return train.travel_time < self.travel_time
+    def apply(self, train):
+        return train.trip_duration < self.trip_duration
 
 
 class PriceFilter(OfferFilter):
-    def __init__(self, price: int):
+    def __init__(self, price: float):
         super().__init__()
         self.price = price
 

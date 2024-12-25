@@ -223,6 +223,7 @@ class RzdParser:
             train.display_number = json_train['DisplayTrainNumber']
             train.departure_time = time.strptime(json_train['DepartureDateTime'], '%Y-%m-%dT%H:%M:%S')
             train.arrival_time = time.strptime(json_train['ArrivalDateTime'], '%Y-%m-%dT%H:%M:%S')
+            train.trip_duration = json_train['TripDuration']
 
             for group in json_train['CarGroups']:
                 if (group['HasPlacesForDisabledPersons']):
