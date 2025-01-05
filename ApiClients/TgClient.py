@@ -38,8 +38,17 @@ class TgClient:
             if response.status_code != 200:
                 self._log_send_error('send_error_notification', chat_id, response.status_code, response.text, message)
 
-    def send_notification(self, message):
-        for chat_id in self.chats:
+    def send_notification(self, target_chat_id, message):
+        response = self.send_chat_notification(message, target_chat_id)
+
+        if response.status_code != 200:
+                self._log_send_error('send_notification', target_chat_id, response.status_code, response.text, message)
+
+        chats = self.chats.copy()
+
+        if target_chat_id in chats: chats.remove(target_chat_id)
+
+        for chat_id in chats:
             response = self.send_chat_notification(message, chat_id)
 
             if response.status_code != 200:

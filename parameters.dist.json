@@ -1,10 +1,11 @@
 {
     "token": "#bot-token#",
     "error_chats": [
-        "#chat-id-1#"
+        "#chat-id-admin-1#"
     ],
+    "target_chat_id": "#chat-id-of-the-target-user#",
     "chats": [
-        "#chat-id-1#",
-        "#chat-id-2#"
+        "#chat-id-to-receive-all-users-notifications-1#",
+        "#chat-id-to-receive-all-users-notifications-2#"
     ]
 }
