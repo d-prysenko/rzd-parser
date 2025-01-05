@@ -1,8 +1,10 @@
 import requests
 import urllib.parse
+import logging
 from Settings import Settings
 
 class TgClient:
+    logger = logging.getLogger()
     base_url = 'https://api.telegram.org/bot{0}/' 
     token = ''
     error_chats = []
@@ -16,22 +18,38 @@ class TgClient:
     def _make_request_url(self, method, params):
         return self.base_url.format(self.token) + method + '?' + urllib.parse.urlencode(params)
 
-    def send_chat_notification(self, message, chat_id):
+    def send_chat_notification(self, message, chat_id, parse_mode='MarkdownV2'):
         params = {
             'chat_id': chat_id,
             'text': message,
-            'parse_mode': 'Markdown',
         }
+
+        if parse_mode != None:
+            params['parse_mode'] = parse_mode
 
         url = self._make_request_url('sendMessage', params)
 
-        requests.get(url)
+        return requests.get(url)
 
-    def send_error_notification(self, message):
+    def send_error_notification(self, message, parse_mode='MarkdownV2'):
         for chat_id in self.error_chats:
-            self.send_chat_notification(message, chat_id)
+            response = self.send_chat_notification(message, chat_id, parse_mode)
+
+            if response.status_code != 200:
+                self._log_send_error('send_error_notification', chat_id, response.status_code, response.text, message)
 
     def send_notification(self, message):
         for chat_id in self.chats:
-            self.send_chat_notification(message, chat_id)
-        
+            response = self.send_chat_notification(message, chat_id)
+
+            if response.status_code != 200:
+                self._log_send_error('send_notification', chat_id, response.status_code, response.text, message)
+                self.send_error_notification(f"🆘 status code: {response.status_code}\nresponse: {response.text}", parse_mode=None)
+    
+    def _log_send_error(self, method, chat_id, status_code, response, message):
+        self.logger.error(f"""
+{method}
+chat_id: {chat_id}
+status_code: {status_code}
+response: {response}
+msg: {message}""")

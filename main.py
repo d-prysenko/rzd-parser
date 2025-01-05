@@ -1,4 +1,6 @@
 import sys, getopt, time, math
+import urllib.parse
+import logging
 from RzdProvider.RzdProvider import RzdProvider
 from ApiClients.RzdApiClient import RzdCity
 # from model.Train import create_tables
@@ -23,9 +25,11 @@ class Query:
 
 rzd_provider = RzdProvider()
 tg_client = TgClient()
+logger = logging.getLogger()
 
 
 def main(argv):
+    logging.basicConfig(filename='bot.log', level=logging.INFO, format="%(asctime)s %(module)s %(levelname)s %(message)s")
 
     # opts, _ = getopt.getopt(argv,":i")
 
@@ -49,6 +53,7 @@ def main(argv):
         try:
             handle_query(query.date, query.origin, query.dest, query.filters)
         except ValueError as e:
+            logger.error(e.args)
             tg_client.send_error_notification(e.args)
             
         time.sleep(1)
@@ -81,7 +86,7 @@ def handle_query(date: str, origin: RzdCity, dest: RzdCity, filters: list[BaseFi
 
 
 def format_train_for_tg(train: Train):
-    msg = '*Поезд {}*\n'.format(train.number) 
+    msg = '*Поезд {}*🚆\n'.format(train.display_number.replace('*', r'\*'))
     msg += '{} - {}\n'.format(time.strftime('%d.%m %H:%M', train.departure_time), time.strftime('%d.%m %H:%M', train.arrival_time))
     msg += 'В пути: {}:{:02d}\n'.format(math.floor(train.trip_duration / 60.0), int(train.trip_duration) % 60)
 
@@ -93,7 +98,7 @@ def format_train_for_tg(train: Train):
         else:
             msg += '{:.2f}k - {:.2f}k\n'.format(offer.min_price / 1000, offer.max_price / 1000)
 
-    return msg
+    return msg.replace('.', r'\.').replace('-', r'\-').replace('(', r'\(').replace(')', r'\)')
 
 
 
