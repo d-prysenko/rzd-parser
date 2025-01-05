@@ -1,19 +1,18 @@
-from RzdApiClient import RzdApiClient
-from TgClient import TgClient
+from ApiClients.RzdApiClient import RzdApiClient
 import json
 import requests
 import time
-from TrainDTO import Train, Offer
+from RzdProvider.TrainDTO import Train, Offer
 
 
 
-class RzdParser:
+class RzdProvider:
     rzd_client = RzdApiClient()
 
     RETRY_COUNT = 3
     
     """Need to prevent api errors/limits"""
-    def _get_trains(self, origin, destination, datetime):
+    def _get_trains_from_api(self, origin, destination, datetime):
         try_number = 0
         last_error = None
 
@@ -40,7 +39,7 @@ class RzdParser:
         return response
 
     def get_trains(self, datetime, origin, destination):
-        response = self._get_trains(origin, destination, datetime)
+        response = self._get_trains_from_api(origin, destination, datetime)
 
         json_data = json.loads(response.text)
 
@@ -82,20 +81,3 @@ class RzdParser:
                 trains.append(train)
         
         return trains
-
-            
-
-
-
-
-
-
-
-
-
-
-    def _is_in_db(self, number, departure_datetime):
-        return Train.select().where(Train.train_number == number and Train.departure_datetime == departure_datetime).count() > 0  
-
-    def _delete_unavailable(self, number, departure_datetime):
-        return Train.get(Train.train_number == number and Train.departure_datetime == departure_datetime).delete_instance()

@@ -1,8 +1,6 @@
 import abc
 from enum import Enum
-import time
-from TrainDTO import Train, Offer
-
+from RzdProvider.TrainDTO import Train, Offer
 
 class FilterType(Enum):
     Train = 1
@@ -29,7 +27,7 @@ class TrainFilter(BaseFilter):
 
 class OfferFilter(BaseFilter):
     """Base Abstract Offer Filter"""
-    
+
     def get_type(self):
         return FilterType.Offer
 
