@@ -9,7 +9,7 @@ class RzdCity(Enum):
 class RzdApiClient:
     http_client = HttpClient()
 
-    def getTrains(self, origin, destination, date):
+    def get_trains(self, origin, destination, date):
         payload = {
             'CarGrouping': "DontGroup",
             'CarIssuingType': "All",
