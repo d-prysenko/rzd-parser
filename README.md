@@ -1,5 +1,7 @@
+# First start
+
 ```sh
-$ cp parameters.dist.json parameters.json
+$ make parameters.json
 ```
 Edit `parameters.json`
 
@@ -9,4 +11,11 @@ $ python main.py # to exec one time
 $ crontab -e # to plan the task
 ...
 * * * * * python /path/to/rzd-parser/main.py
+```
+
+# Filters
+Filters placed in `Filters/OfferFilters.py` and `Filters/TrainFilters.py`, docs in `Filters/FILTERS.md`.  
+To update the filter doc use:
+```sh
+$ make docs
 ```

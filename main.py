@@ -2,16 +2,56 @@ import sys, getopt, time, math
 from RzdParser import RzdParser
 from RzdApiClient import RzdCity
 # from model.Train import create_tables
-from Filters import DepartureTimeFilter, Filters, OnlyLowerPlacesFilter, PriceFilter, TripDurationLowerThan, WithPetsFilter
+from Filters.Filters import BaseFilter, Filters
+from Filters.OfferFilters import OnlyLowerPlacesFilter, PriceFilter, WithPetsFilter
+from Filters.TrainFilters import TripDurationLowerThan
 from TgClient import TgClient
 from TrainDTO import Train, Offer
 
-queries = [
-    {"chat_id", "2025-01-17T00:00:00", RzdCity.Moscow, RzdCity.Spb, "filters"},
-    {"chat_id", "2025-01-06T00:00:00", RzdCity.Moscow, RzdCity.Voronezh, "filters"},
-    {"chat_id", "2025-01-16T00:00:00", RzdCity.Moscow, RzdCity.Spb, "filters"},
+class Query:
+    date: str
+    origin: RzdCity
+    dest: RzdCity
+    filters: list[BaseFilter]
+
+    def __init__(self, date: str, origin: RzdCity, dest: RzdCity, filters: list[BaseFilter]):
+        self.date = date
+        self.origin = origin
+        self.dest = dest
+        self.filters = filters
+
+default_filters: list[BaseFilter] = [
+    PriceFilter(4000),
+    WithPetsFilter(),
+    TripDurationLowerThan(14 * 60),
+    OnlyLowerPlacesFilter()
 ]
 
+queries = [
+    Query("2025-01-07T00:00:00", RzdCity.Voronezh, RzdCity.Moscow, default_filters),
+    Query("2025-01-08T00:00:00", RzdCity.Voronezh, RzdCity.Moscow, default_filters),
+]
+
+parser = RzdParser()
+tg_client = TgClient()
+
+def handle_query(date: str, origin: RzdCity, dest: RzdCity, filters: list[BaseFilter]):
+    trains = parser.get_trains(date, origin, dest)
+
+    trains_filters = Filters(trains)
+
+    for filter in filters:
+        trains_filters.add(filter)
+
+    filtered_trains = trains_filters.filter().aggregate()
+
+    for train in filtered_trains:
+        # if previous_same(train):
+        #     continue
+
+        msg = format_tg_msg(train)
+        tg_client.send_notification(msg)
+        print(msg)
 
 def main(argv):
 
@@ -21,50 +61,23 @@ def main(argv):
     #     print('Creating tables..')
     #     create_tables()
 
-    parser = RzdParser()
-    tg_client = TgClient()
+    for query in queries:
+        handle_query(query.date, query.origin, query.dest, query.filters)
+        time.sleep(1)
+
+
+# def previous_same(train: Train):
+#     prev = get_previous(train.number)
+
+#     if prev == None:
+#         return False
     
-    # parser.handleOffers("2024-09-01T00:00:00", RzdCity.Voronezh, RzdCity.Moscow)
-    # time.sleep(1)
-    # parser.getTrains("2024-12-29T00:00:00", RzdCity.Moscow, RzdCity.Voronezh)
-    # trains = parser.get_trains("2025-01-16T00:00:00", RzdCity.Moscow, RzdCity.Spb)
-    trains = parser.get_trains("2024-12-30T00:00:00", RzdCity.Moscow, RzdCity.Voronezh)
-
-    filtered_trains = Filters(trains) \
-        .add(PriceFilter(5000)) \
-        .add(WithPetsFilter()) \
-        .add(TripDurationLowerThan(14 * 60)) \
-        .add(DepartureTimeFilter('09:00')) \
-        .filter() \
-        .aggregate()
-
-
-
-    # print(filtered_trains)
-
-    for train in filtered_trains:
-        msg = format_tg_msg(train)
-        # tg_client.send_notification(msg)
-        print(msg)
-
-    # time.sleep(1)
-    # parser.handleOffers("2024-07-09T00:00:00")
-    # time.sleep(1)
-    # parser.handleOffers("2024-07-10T00:00:00")
-    # time.sleep(1)
-    # parser.handleOffers("2024-07-11T00:00:00")
-    # time.sleep(1)
-    # parser.handleOffers("2024-07-12T00:00:00")
-    # time.sleep(1)
-    # parser.handleOffers("2024-07-13T00:00:00")
-    # time.sleep(1)
-    # parser.handleOffers("2024-07-14T00:00:00")
-
+    
 
 def format_tg_msg(train: Train):
-    msg = '*Поезд ' + train.display_number + '*\n' 
+    msg = '*Поезд ' + train.number + '*\n' 
     msg += time.strftime('%d.%m %H:%M', train.departure_time) + ' - ' + time.strftime('%d.%m %H:%M', train.arrival_time) + '\n'
-    msg += 'В пути: ' + str(math.floor(train.trip_duration / 60.0)) + ':' + str(int(train.trip_duration) % 60) + '\n'
+    msg += 'В пути: ' + str(math.floor(train.trip_duration / 60.0)) + ':' + "{:02d}".format(int(train.trip_duration) % 60) + '\n'
 
     for offer in train.offers:
         msg += offer.car_type_name + ': ' + str(offer.place_quantity) + '(' + str(offer.lower_place_quantity) + ') шт., '

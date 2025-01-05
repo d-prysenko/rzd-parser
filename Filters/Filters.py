@@ -17,8 +17,9 @@ class BaseFilter(abc.ABC):
     def apply(self, entity) -> bool:
         """Apply filter"""
 
-
 class TrainFilter(BaseFilter):
+    """Base Abstract Train Filter"""
+
     def get_type(self):
         return FilterType.Train
 
@@ -27,6 +28,8 @@ class TrainFilter(BaseFilter):
         """Apply filter"""
 
 class OfferFilter(BaseFilter):
+    """Base Abstract Offer Filter"""
+    
     def get_type(self):
         return FilterType.Offer
 
@@ -138,59 +141,3 @@ class Filters:
 
 
 
-
-
-class DepartureTimeFilter(TrainFilter):
-    def __init__(self, time_from: str, time_to: str = '23:59'):
-        super().__init__()
-
-        _time_from = time.strptime(time_from, '%H:%M')
-        _time_to = time.strptime(time_to, '%H:%M')
-
-        self.time_from = _time_from.tm_hour * 60 + _time_from.tm_min
-        self.time_to = _time_to.tm_hour * 60 + _time_to.tm_min
-
-    def apply(self, train):
-
-        departure_time = train.departure_time.tm_hour * 60 + train.departure_time.tm_min
-
-        return departure_time >= self.time_from and departure_time <= self.time_to
-
-class TripDurationLowerThan(TrainFilter):
-    def __init__(self, minutes: float):
-        super().__init__()
-        self.trip_duration = minutes
-
-    def apply(self, train):
-        return train.trip_duration < self.trip_duration
-
-
-class PriceFilter(OfferFilter):
-    def __init__(self, price: float):
-        super().__init__()
-        self.price = price
-
-    def apply(self, offer):
-        return offer.min_price < self.price
-    
-class WithPetsFilter(OfferFilter):
-    def __init__(self):
-        super().__init__()
-
-    def apply(self, offer):
-        return offer.service_class in [
-            '3Б', '3Д', '3У',
-            '2К', '2У', '2Л', '2Н', '2Д', '2Э', '2Ф', '2Б',
-            '2А',
-            '2В', '2Ж', '3Ж', '1В',
-            '3О', '3Р',
-            '1Э', '1Ф', '1У', '1Л', '1Е', '1Б',
-            '1А', '1И', '1М'
-        ]
-
-class OnlyLowerPlacesFilter(OfferFilter):
-    def __init__(self):
-        super().__init__()
-
-    def apply(self, offer):
-        return offer.lower_place_quantity > 0
