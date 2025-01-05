@@ -81,16 +81,17 @@ def handle_query(date: str, origin: RzdCity, dest: RzdCity, filters: list[BaseFi
 
 
 def format_train_for_tg(train: Train):
-    msg = '*Поезд ' + train.number + '*\n' 
-    msg += time.strftime('%d.%m %H:%M', train.departure_time) + ' - ' + time.strftime('%d.%m %H:%M', train.arrival_time) + '\n'
-    msg += 'В пути: ' + str(math.floor(train.trip_duration / 60.0)) + ':' + "{:02d}".format(int(train.trip_duration) % 60) + '\n'
+    msg = '*Поезд {}*\n'.format(train.number) 
+    msg += '{} - {}\n'.format(time.strftime('%d.%m %H:%M', train.departure_time), time.strftime('%d.%m %H:%M', train.arrival_time))
+    msg += 'В пути: {}:{:02d}\n'.format(math.floor(train.trip_duration / 60.0), int(train.trip_duration) % 60)
 
     for offer in train.offers:
-        msg += offer.car_type_name + ': ' + str(offer.place_quantity) + '(' + str(offer.lower_place_quantity) + ') шт., '
+        msg += '{}: {}({}) шт., '.format(offer.car_type_name, offer.place_quantity, offer.lower_place_quantity)
+
         if (offer.min_price == offer.max_price):
-            msg += "{:.2f}".format(offer.min_price / 1000) + 'k\n'
+            msg += '{:.2f}k\n'.format(offer.min_price / 1000)
         else:
-            msg += "{:.2f}".format(offer.min_price / 1000) + 'k - ' + "{:.2f}".format(offer.max_price / 1000) + 'k\n'
+            msg += '{:.2f}k - {:.2f}k\n'.format(offer.min_price / 1000, offer.max_price / 1000)
 
     return msg
 
