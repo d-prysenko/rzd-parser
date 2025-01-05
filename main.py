@@ -62,7 +62,11 @@ def main(argv):
     #     create_tables()
 
     for query in queries:
-        handle_query(query.date, query.origin, query.dest, query.filters)
+        try:
+            handle_query(query.date, query.origin, query.dest, query.filters)
+        except ValueError as e:
+            tg_client.send_error_notification(e.args)
+            
         time.sleep(1)
 
 

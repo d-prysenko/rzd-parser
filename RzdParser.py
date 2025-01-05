@@ -9,7 +9,6 @@ from TrainDTO import Train, Offer
 
 class RzdParser:
     rzd_client = RzdApiClient()
-    tg_client = TgClient()
 
     RETRY_COUNT = 3
     
@@ -44,6 +43,9 @@ class RzdParser:
         response = self._get_trains(origin, destination, datetime)
 
         json_data = json.loads(response.text)
+
+        if ('errorInfo' in json_data):
+            raise ValueError(json_data['errorInfo']['Message'])
 
         trains: list[Train] = []
 
