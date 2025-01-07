@@ -1,5 +1,5 @@
 import time
-from Filters.Filters import TrainFilter
+from filters.Filters import TrainFilter
 
 
 class DepartureTimeFilter(TrainFilter):

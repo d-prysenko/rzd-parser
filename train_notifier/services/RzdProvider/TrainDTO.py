@@ -1,4 +1,4 @@
-from RzdProvider.OfferDTO import Offer
+from services.RzdProvider.OfferDTO import Offer
 from time import struct_time
 
 class Train:

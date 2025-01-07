@@ -1,15 +1,15 @@
 import sys, getopt, time, math
 import logging
-from RzdProvider.RzdProvider import RzdProvider
-from ApiClients.RzdApiClient import RzdCity
-from Settings import Settings
+from services.RzdProvider.RzdProvider import RzdProvider
+from services.RzdProvider.TrainDTO import Train, Offer
+from services.Settings import Settings
 from model.Notification import create_tables, Notification
 from model.NotificationRepository import NotificationRepository
-from Filters.Filters import BaseFilter, Filters
-from Filters.OfferFilters import OnlyLowerPlacesFilter, PriceFilter, WithPetsFilter
-from Filters.TrainFilters import TripDurationLowerThan
-from ApiClients.TgClient import TgClient
-from RzdProvider.TrainDTO import Train, Offer
+from filters.Filters import BaseFilter, Filters
+from filters.OfferFilters import OnlyLowerPlacesFilter, PriceFilter, WithPetsFilter
+from filters.TrainFilters import TripDurationLowerThan
+from services.ApiClients.RzdApiClient import RzdCity
+from services.ApiClients.TgClient import TgClient
 
 class Query:
     query_id: int
@@ -35,7 +35,7 @@ notification_rep = NotificationRepository()
 
 
 def main(argv):
-    logging.basicConfig(filename='bot.log', level=logging.INFO, format="%(asctime)s %(module)s %(levelname)s %(message)s")
+    logging.basicConfig(filename='logs/bot.log', level=logging.INFO, format="%(asctime)s %(module)s %(levelname)s %(message)s")
 
     opts, _ = getopt.getopt(argv,":i")
 
@@ -54,7 +54,7 @@ def main(argv):
     chat_id = Settings().get('target_chat_id')
 
     queries = [
-        Query(1, chat_id, "2025-01-07T00:00:00", RzdCity.Voronezh, RzdCity.Moscow, default_filters),
+        Query(1, chat_id, "2025-01-06T00:00:00", RzdCity.Voronezh, RzdCity.Moscow, default_filters),
         Query(2, chat_id, "2025-01-08T00:00:00", RzdCity.Voronezh, RzdCity.Moscow, default_filters),
     ]
 
@@ -83,7 +83,7 @@ def handle_query(query: Query):
         msg = format_train_for_tg(train)
         print(msg)
 
-    remove_notifications_for_not_presented(filtered_trains, query)
+    remove_notifications_for_non_presented_offers(filtered_trains, query)
 
     filtered_trains = remove_offers_that_not_changed(filtered_trains, query)
 
@@ -143,7 +143,7 @@ def create_or_update_notifications(trains: list[Train], query: Query):
             else:
                 notification_rep.update(notification, offer.min_price, offer.place_quantity, offer.lower_place_quantity)
 
-def remove_notifications_for_not_presented(trains: list[Train], query: Query):
+def remove_notifications_for_non_presented_offers(trains: list[Train], query: Query):
     notifications = notification_rep.select_all_by_query_id(query.query_id)
     for notification in notifications:
         if not offer_for_notification_presented(trains, notification):

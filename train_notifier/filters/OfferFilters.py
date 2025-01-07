@@ -1,4 +1,4 @@
-from Filters.Filters import OfferFilter
+from filters.Filters import OfferFilter
 
 
 class PriceFilter(OfferFilter):

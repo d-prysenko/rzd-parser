@@ -1,8 +1,8 @@
-from ApiClients.RzdApiClient import RzdApiClient
+from services.ApiClients.RzdApiClient import RzdApiClient
 import json
 import requests
 import time
-from RzdProvider.TrainDTO import Train, Offer
+from services.RzdProvider.TrainDTO import Train, Offer
 
 
 

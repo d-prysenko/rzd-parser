@@ -1,8 +1,8 @@
 import datetime
 from peewee import *
-from Settings import Settings
+from services.Settings import Settings
 
-db = SqliteDatabase(Settings().cwd + '/model/notifications.db')
+db = SqliteDatabase(Settings().cwd + '/storage/notifications.db')
 
 def create_tables():
     db.create_tables([Notification])

@@ -1,4 +1,4 @@
-from ApiClients.HttpClient import HttpClient
+from services.ApiClients.HttpClient import HttpClient
 from enum import Enum
 
 class RzdCity(Enum):

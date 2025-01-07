@@ -1,5 +1,10 @@
 # First start
 
+Install dependencies
+```sh
+$ make deps
+```
+Make app config
 ```sh
 $ make parameters.json
 ```
@@ -14,7 +19,7 @@ $ crontab -e # to plan the task
 ```
 
 # Filters
-Filters placed in `Filters/OfferFilters.py` and `Filters/TrainFilters.py`, docs in `Filters/FILTERS.md`.  
+Filters placed in `filters/OfferFilters.py` and `filters/TrainFilters.py`, docs in `filters/FILTERS.md`.  
 To update the filter doc use:
 ```sh
 $ make docs

@@ -1,6 +1,6 @@
 import abc
 from enum import Enum
-from RzdProvider.TrainDTO import Train, Offer
+from services.RzdProvider.TrainDTO import Train, Offer
 
 class FilterType(Enum):
     Train = 1

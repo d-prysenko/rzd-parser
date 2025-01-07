@@ -4,7 +4,7 @@
             "name": "Python Debugger: Python File",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/main.py",
+            "program": "${workspaceFolder}/train_notifier/main.py",
             "python": "~/.venvs/MyEnv/bin/python"
         }
     ]

@@ -97,7 +97,6 @@ ENV/
 [Ll]ib
 [Ll]ib64
 [Ll]ocal
-[Ss]cripts
 pyvenv.cfg
 .venv
 pip-selfcheck.json
@@ -185,4 +184,4 @@ fabric.properties
 # .idea
 
 parameters.json
-model/notifications.db
+storage/*

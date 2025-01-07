@@ -1,7 +1,7 @@
 import requests
 import urllib.parse
 import logging
-from Settings import Settings
+from services.Settings import Settings
 
 class TgClient:
     logger = logging.getLogger()
@@ -31,9 +31,9 @@ class TgClient:
 
         return requests.get(url)
 
-    def send_error_notification(self, message, parse_mode='MarkdownV2'):
+    def send_error_notification(self, message, parse_mode=None):
         for chat_id in self.error_chats:
-            response = self.send_chat_notification(message, chat_id, parse_mode)
+            response = self.send_chat_notification("🆘 " + str(message), chat_id, parse_mode)
 
             if response.status_code != 200:
                 self._log_send_error('send_error_notification', chat_id, response.status_code, response.text, message)
@@ -53,7 +53,7 @@ class TgClient:
 
             if response.status_code != 200:
                 self._log_send_error('send_notification', chat_id, response.status_code, response.text, message)
-                self.send_error_notification(f"🆘 status code: {response.status_code}\nresponse: {response.text}", parse_mode=None)
+                self.send_error_notification(f"status code: {response.status_code}\nresponse: {response.text}")
     
     def _log_send_error(self, method, chat_id, status_code, response, message):
         self.logger.error(f"""

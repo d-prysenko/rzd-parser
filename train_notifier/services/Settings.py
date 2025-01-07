@@ -13,7 +13,7 @@ class Settings(metaclass=Singleton):
     cwd = ''
 
     def __init__(self):
-        self.cwd = os.path.dirname(__file__)
+        self.cwd = os.path.dirname(__file__) + '/../../'
 
         with open(self.cwd + '/parameters.json', 'r') as params_file:
             self.data = json.load(params_file)

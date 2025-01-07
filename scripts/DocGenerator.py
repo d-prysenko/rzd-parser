@@ -1,7 +1,9 @@
-import Filters.OfferFilters
-import Filters.TrainFilters
+import sys, os, inspect
 
-import sys, inspect
+sys.path.insert(1, os.path.dirname(__file__) + '/../train_notifier/')
+
+import filters.TrainFilters
+import filters.OfferFilters
 
 def format_markdown_param(param):
     formatted = '>**{}**: {}'.format(param._name, param._annotation.__name__)
@@ -38,14 +40,14 @@ def format_markdown_filter_classes(module_name: str):
 def main():
     res = "# Фильтры\n\n"
     res += "## Фильтры для билетов\n\n"
-    res += format_markdown_filter_classes('Filters.OfferFilters')
+    res += format_markdown_filter_classes('filters.OfferFilters')
     res += "## Фильтры для поездов\n\n"
-    res += format_markdown_filter_classes('Filters.TrainFilters')
+    res += format_markdown_filter_classes('filters.TrainFilters')
 
-    print("Filters/FILTERS.md")
+    print("train_notifier/filters/FILTERS.md")
     # print(res)
 
-    with open("Filters/FILTERS.md", "w") as f:
+    with open("train_notifier/filters/FILTERS.md", "w") as f:
         f.write(res)
 
 
