@@ -3,7 +3,8 @@ import logging
 from RzdProvider.RzdProvider import RzdProvider
 from ApiClients.RzdApiClient import RzdCity
 from Settings import Settings
-from model.Notification import create_tables, create_notification, find_notification, Notification, notification_exists, update_notification, select_notifications_by_query_id
+from model.Notification import create_tables, Notification
+from model.NotificationRepository import NotificationRepository
 from Filters.Filters import BaseFilter, Filters
 from Filters.OfferFilters import OnlyLowerPlacesFilter, PriceFilter, WithPetsFilter
 from Filters.TrainFilters import TripDurationLowerThan
@@ -30,6 +31,7 @@ class Query:
 rzd_provider = RzdProvider()
 tg_client = TgClient()
 logger = logging.getLogger()
+notification_rep = NotificationRepository()
 
 
 def main(argv):
@@ -104,7 +106,7 @@ def remove_offers_that_not_changed(trains: list[Train], query: Query):
         offers: list[Offer] = []
 
         for offer in train.offers:
-            if not notification_exists(
+            if not notification_rep.exists(
                 query.chat_id,
                 query.query_id,
                 train.display_number,
@@ -126,10 +128,10 @@ def remove_offers_that_not_changed(trains: list[Train], query: Query):
 def create_or_update_notifications(trains: list[Train], query: Query):
     for train in trains:
         for offer in train.offers:
-            notification = find_notification(query.chat_id, query.query_id, train.display_number, format_time(train.departure_time), offer.car_type_name)
+            notification = notification_rep.get_or_none(query.chat_id, query.query_id, train.display_number, format_time(train.departure_time), offer.car_type_name)
 
             if notification == None:
-                create_notification(
+                notification_rep.create(
                     query.chat_id,
                     query.query_id,
                     train.display_number,
@@ -139,10 +141,10 @@ def create_or_update_notifications(trains: list[Train], query: Query):
                     offer.place_quantity,
                     offer.lower_place_quantity)
             else:
-                update_notification(notification, offer.min_price, offer.place_quantity, offer.lower_place_quantity)
+                notification_rep.update(notification, offer.min_price, offer.place_quantity, offer.lower_place_quantity)
 
 def remove_notifications_for_not_presented(trains: list[Train], query: Query):
-    notifications = select_notifications_by_query_id(query.query_id)
+    notifications = notification_rep.select_all_by_query_id(query.query_id)
     for notification in notifications:
         if not offer_for_notification_presented(trains, notification):
             print('deleting ', end='')
