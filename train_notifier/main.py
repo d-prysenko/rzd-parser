@@ -1,37 +1,22 @@
-import sys, getopt, time, math
+import sys, getopt, time
 import logging
 from services.RzdProvider.RzdProvider import RzdProvider
 from services.RzdProvider.TrainDTO import Train, Offer
 from services.Settings import Settings
+from services.NotificationManager import NotificationManager
 from model.Notification import create_tables, Notification
-from model.NotificationRepository import NotificationRepository
 from filters.Filters import BaseFilter, Filters
 from filters.OfferFilters import OnlyLowerPlacesFilter, PriceFilter, WithPetsFilter
 from filters.TrainFilters import TripDurationLowerThan
 from services.ApiClients.RzdApiClient import RzdCity
 from services.ApiClients.TgClient import TgClient
-
-class Query:
-    query_id: int
-    chat_id: str
-    date: str
-    origin: RzdCity
-    dest: RzdCity
-    filters: list[BaseFilter]
-
-    def __init__(self, query_id: int, chat_id: str, date: str, origin: RzdCity, dest: RzdCity, filters: list[BaseFilter]):
-        self.query_id = query_id
-        self.chat_id = chat_id
-        self.date = date
-        self.origin = origin
-        self.dest = dest
-        self.filters = filters
+from services.Query import Query
 
 
 rzd_provider = RzdProvider()
 tg_client = TgClient()
 logger = logging.getLogger()
-notification_rep = NotificationRepository()
+notification_manager = NotificationManager()
 
 
 def main(argv):
@@ -80,107 +65,27 @@ def handle_query(query: Query):
     filtered_trains = trains_filters.filter().aggregate()
 
     for train in filtered_trains:
-        msg = format_train_for_tg(train)
-        print(msg)
+        print_train(train)
 
-    remove_notifications_for_non_presented_offers(filtered_trains, query)
-
-    filtered_trains = remove_offers_that_not_changed(filtered_trains, query)
-
-    create_or_update_notifications(filtered_trains, query)
+    filtered_trains = notification_manager.prepare_trains_for_notifications(filtered_trains, query)
 
     print('\n\nsending')
 
     for train in filtered_trains:
-        msg = format_train_for_tg(train)
+        msg = notification_manager.format_train_for_tg(train)
         tg_client.send_notification(query.chat_id, msg)
         print(msg)
 
     print('\nend.')
 
-
-def remove_offers_that_not_changed(trains: list[Train], query: Query):
-    result: list[Train] = []
-
-    for train in trains:
-        offers: list[Offer] = []
-
-        for offer in train.offers:
-            if not notification_rep.exists(
-                query.chat_id,
-                query.query_id,
-                train.display_number,
-                format_time(train.departure_time),
-                offer.car_type_name,
-                offer.min_price,
-                offer.place_quantity,
-                offer.lower_place_quantity):
-                offers.append(offer)
-
-        if (len(offers) > 0):
-            train_with_filtered_offers = Train().copy(train)
-            train_with_filtered_offers.offers = offers
-
-            result.append(train_with_filtered_offers)
-
-    return result
-
-def create_or_update_notifications(trains: list[Train], query: Query):
-    for train in trains:
-        for offer in train.offers:
-            notification = notification_rep.get_or_none(query.chat_id, query.query_id, train.display_number, format_time(train.departure_time), offer.car_type_name)
-
-            if notification == None:
-                notification_rep.create(
-                    query.chat_id,
-                    query.query_id,
-                    train.display_number,
-                    format_time(train.departure_time),
-                    offer.car_type_name,
-                    offer.min_price,
-                    offer.place_quantity,
-                    offer.lower_place_quantity)
-            else:
-                notification_rep.update(notification, offer.min_price, offer.place_quantity, offer.lower_place_quantity)
-
-def remove_notifications_for_non_presented_offers(trains: list[Train], query: Query):
-    notifications = notification_rep.select_all_by_query_id(query.query_id)
-    for notification in notifications:
-        if not offer_for_notification_presented(trains, notification):
-            print('deleting ', end='')
-            print(notification)
-            notification.delete_instance()
-
-# TODO: may be bad performance, try to use map(diff of sets) instead of iterating
-def offer_for_notification_presented(trains: list[Train], notification: Notification):
-    for train in trains:
-        if train.display_number != notification.train_number:
-            continue
-
-        for offer in train.offers:
-            if offer.car_type_name == notification.car_type_name:
-                return True
-
-    return False
-
-def format_train_for_tg(train: Train):
-    msg = '*Поезд {}*🚆\n'.format(train.display_number.replace('*', r'\*'))
-    msg += '{} - {}\n'.format(format_time(train.departure_time), format_time(train.arrival_time))
-    msg += 'В пути: {}:{:02d}\n'.format(math.floor(train.trip_duration / 60.0), int(train.trip_duration) % 60)
+def print_train(train: Train):
+    print(f"Поезд {train.display_number}")
+    print(time.strftime('%d.%m %H:%M', train.departure_time) + " - " + time.strftime('%d.%m %H:%M', train.arrival_time))
 
     for offer in train.offers:
-        msg += '{}: {}({}) шт., '.format(offer.car_type_name, offer.place_quantity, offer.lower_place_quantity)
+        print(f"{offer.car_type_name}: {offer.place_quantity}({offer.lower_place_quantity})")
 
-        if (offer.min_price == offer.max_price):
-            msg += '{:.2f}k\n'.format(offer.min_price / 1000)
-        else:
-            msg += '{:.2f}k - {:.2f}k\n'.format(offer.min_price / 1000, offer.max_price / 1000)
-
-    return msg.replace('.', r'\.').replace('-', r'\-').replace('(', r'\(').replace(')', r'\)')
-
-def format_time(datetime):
-    return time.strftime('%d.%m %H:%M', datetime)
-
+    print()
 
 if __name__ == "__main__":
     main(sys.argv[1:])
